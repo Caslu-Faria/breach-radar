@@ -7,6 +7,11 @@ repositório.
 > legacy/BUGS_FOUND.md, mensagens de commit, comentários quando necessários, etc.) deve ser
 > escrita em **português brasileiro**.
 
+## Conventions
+
+- Sugerir commits após cada nova implementação
+- Criar PRs após commits
+
 ## Estado do repositório
 
 Este repositório atualmente **não contém código de aplicação** — apenas o briefing do desafio:
