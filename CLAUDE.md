@@ -9,7 +9,7 @@ repositório.
 
 ## Conventions
 
-- Sugerir commits após cada nova implementação
+- Sugerir commits após cada nova implementação de feature ou task
 - Criar PRs após commits
 
 ## Estado do repositório
