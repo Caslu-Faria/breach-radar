@@ -1,0 +1,21 @@
+"""Aplicação FastAPI do Breach Radar."""
+
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from app import (
+    database,
+    models,  # noqa: F401 — registra Breach em Base.metadata para o create_all
+)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    database.Base.metadata.create_all(bind=database.engine)
+    yield
+
+
+app = FastAPI(title="Breach Radar", lifespan=lifespan)
