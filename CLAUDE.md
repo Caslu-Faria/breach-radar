@@ -10,7 +10,9 @@ repositório.
 ## Conventions
 
 - Sugerir commits após cada nova implementação de feature ou task
+- Explicar o motivo de todas as edições sugeridas
 - Criar PRs após commits
+- Documentar o projeto após cada phase ou implementação concluída
 
 ## Estado do repositório
 
