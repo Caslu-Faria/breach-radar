@@ -1,5 +1,7 @@
 # Breach Radar
 
+[![CI](https://github.com/Caslu-Faria/breach-radar/actions/workflows/ci.yml/badge.svg)](https://github.com/Caslu-Faria/breach-radar/actions/workflows/ci.yml)
+
 API REST em **Python (FastAPI) + PostgreSQL** que sincroniza e expõe o catálogo público de
 breaches do [HIBP](https://haveibeenpwned.com/api/v3/breaches), com filtros ricos sobre os
 dados. Projeto desenvolvido para o desafio backend Neuroscan (ver `CLAUDE.md`).
@@ -77,6 +79,12 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
+## CI
+
+`.github/workflows/ci.yml` roda em cada push/PR: instala dependências com `uv`, `ruff check`,
+`ruff format --check` e `pytest` (cobertura ≥ 80%, sem Postgres — usa SQLite, igual ao ambiente
+local).
+
 ## Rodando com Docker (Postgres real)
 
 O `docker-compose.yml` sobe a API junto com um Postgres 16 real — é o caminho recomendado
@@ -124,7 +132,7 @@ Postgres).
 - Itens opcionais (Phase 8):
   - [x] Docker + docker-compose (app + Postgres 16 com healthcheck) — ver
         [Rodando com Docker](#rodando-com-docker-postgres-real)
-  - [ ] CI (GitHub Actions)
+  - [x] CI (GitHub Actions) — ver [CI](#ci)
   - [ ] Alembic (migrations)
   - [ ] Sync agendado (APScheduler)
   - [ ] Logs estruturados em JSON
@@ -185,3 +193,7 @@ Postgres).
     `pg_isready`); o `app` só inicia após o `db` ficar saudável. Ambiente de desenvolvimento sem
     Docker disponível — configuração não validada localmente via `docker compose up`; fica como
     passo de verificação manual do usuário.
+17. **CI**: `.github/workflows/ci.yml` reusa exatamente os comandos documentados em
+    [Como rodar os testes](#como-rodar-os-testes) e [Lint e formatação](#lint-e-formatação)
+    (`uv sync`, `ruff check`, `ruff format --check`, `pytest`) — sem etapa de Postgres, já que a
+    suíte roda 100% em SQLite.
