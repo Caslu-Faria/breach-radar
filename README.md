@@ -63,9 +63,9 @@ Documentação interativa (Swagger) em <http://127.0.0.1:8000/docs>.
 uv run pytest
 ```
 
-A suíte roda com cobertura habilitada (`--cov=app --cov=legacy --cov-report=term-missing`,
-configurado em `pyproject.toml`); a meta do desafio é cobertura mínima de 80%. Todos os testes
-usam SQLite em memória — nenhuma chamada real à HIBP ou ao Postgres é feita em CI.
+A suíte roda com cobertura habilitada e `--cov-fail-under=80` (configurado em
+`pyproject.toml`); a meta do desafio é cobertura mínima de 80% e a suíte atinge 100%. Todos os
+testes usam SQLite em memória — nenhuma chamada real à HIBP ou ao Postgres é feita em CI.
 
 ## Lint e formatação
 
@@ -88,7 +88,11 @@ uv run ruff format --check .
       combinados em AND (`legacy.breach_matcher.filter_breaches`), paginação (`page`/`page_size`)
       e validação manual dos query params (`app/validators.py`, decisão #13) → `400` com
       mensagem clara para parâmetros malformados
-- [ ] Testes de resiliência (feed fora do ar) e fechamento da cobertura ≥ 80%
+- [x] Testes de resiliência (`tests/test_resilience.py`): com o banco já populado por um
+      `/sync` anterior, feed da HIBP em timeout/`500` → `GET /breaches` e
+      `GET /breaches/{name}` continuam `200` a partir do banco local, e um novo `/sync` retorna
+      `503` sem alterar o banco. Cobertura fechada em 100% (`--cov-fail-under=80`,
+      `tests/test_database.py` cobre `app/database.py`)
 - [ ] `TEST_PLAN.md`
 - [ ] Itens opcionais (Docker/compose, CI, Alembic, sync agendado, logs JSON, ETag)
 
@@ -137,3 +141,7 @@ uv run ruff format --check .
     `paginate(...)`, antes de voltar para `BreachOut` (snake_case) com
     `app/filters.dict_to_breach_out`. `total_pages = ceil(total / page_size)`, e `0` quando não
     há nenhum resultado.
+15. **`app/database.py` extrai `_create_engine(database_url)`** — função pura que decide entre
+    SQLite em memória (`StaticPool`) e `create_engine` padrão (Postgres/produção). Permite testar
+    o ramo não-SQLite (`tests/test_database.py`) sem recarregar o módulo nem depender de um
+    Postgres real.
