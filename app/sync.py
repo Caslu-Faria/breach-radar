@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import logging
+
 from sqlalchemy.orm import Session
 
-from app.hibp_client import fetch_breaches
+from app.hibp_client import HIBPFeedError, fetch_breaches
 from app.models import Breach
 from app.schemas import SyncResult
+
+logger = logging.getLogger(__name__)
 
 
 def sync_breaches(db: Session) -> SyncResult:
@@ -22,7 +26,13 @@ def sync_breaches(db: Session) -> SyncResult:
     Se o feed falhar, `HIBPFeedError` se propaga sem que o banco seja
     alterado.
     """
-    feed = fetch_breaches()
+    logger.info("sync iniciado")
+
+    try:
+        feed = fetch_breaches()
+    except HIBPFeedError as exc:
+        logger.warning("sync falhou: %s", exc)
+        raise
 
     created = 0
     updated = 0
@@ -53,9 +63,22 @@ def sync_breaches(db: Session) -> SyncResult:
 
     db.commit()
 
-    return SyncResult(
+    result = SyncResult(
         total_from_feed=len(feed),
         created=created,
         updated=updated,
         skipped=skipped,
     )
+    logger.info(
+        "sync concluído",
+        extra={
+            "total_from_feed": result.total_from_feed,
+            # prefixo "breaches_" evita colidir com o atributo `created` do
+            # próprio LogRecord (logging recusa `extra` que sobrescreva atributos
+            # padrão do record).
+            "breaches_created": result.created,
+            "breaches_updated": result.updated,
+            "breaches_skipped": result.skipped,
+        },
+    )
+    return result
