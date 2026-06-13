@@ -84,7 +84,10 @@ uv run ruff format --check .
 - [x] Cliente HIBP (`app/hibp_client.py`) + `POST /sync` (`app/sync.py`,
       `app/routers/sync.py`) — idempotente (upsert por `Name`), `503` se o feed estiver
       indisponível/inválido, defaults para campos ausentes (decisão #10)
-- [ ] `GET /breaches` e `GET /breaches/{name}` com os filtros descritos no `CLAUDE.md`
+- [x] `GET /breaches` e `GET /breaches/{name}` (`app/routers/breaches.py`) com os 12 filtros
+      combinados em AND (`legacy.breach_matcher.filter_breaches`), paginação (`page`/`page_size`)
+      e validação manual dos query params (`app/validators.py`, decisão #13) → `400` com
+      mensagem clara para parâmetros malformados
 - [ ] Testes de resiliência (feed fora do ar) e fechamento da cobertura ≥ 80%
 - [ ] `TEST_PLAN.md`
 - [ ] Itens opcionais (Docker/compose, CI, Alembic, sync agendado, logs JSON, ETag)
@@ -122,3 +125,15 @@ uv run ruff format --check .
     app e a suíte de testes sem `.env`/Docker/Postgres. Em produção, `DATABASE_URL` (via `.env`
     ou `docker-compose`) aponta para o Postgres real; a validação final contra Postgres é
     documentada como passo manual (Phase 8).
+13. **Filtros e paginação de `GET /breaches` declarados como `str | None = Query(None)`** —
+    evita o `422` automático do FastAPI para parâmetros malformados. Cada filtro é validado
+    manualmente em `app/validators.py` (`parse_date_param`, `parse_non_negative_int_param`,
+    `parse_bool_param`, `parse_positive_int_param`, `validate_name_param`), que levanta
+    `HTTPException(400, "...")` com uma mensagem indicando o campo e o formato esperado —
+    atende ao requisito do `CLAUDE.md` de `400` com mensagem clara para parâmetros inválidos.
+14. **`GET /breaches` reaproveita `legacy.breach_matcher`** como motor de filtros: os registros
+    do banco são convertidos para o dict PascalCase do feed da HIBP (`app/filters.breach_to_dict`),
+    filtrados via `filter_breaches(...)` (12 filtros, semântica AND) e paginados via
+    `paginate(...)`, antes de voltar para `BreachOut` (snake_case) com
+    `app/filters.dict_to_breach_out`. `total_pages = ceil(total / page_size)`, e `0` quando não
+    há nenhum resultado.
