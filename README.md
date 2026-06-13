@@ -151,6 +151,24 @@ para registrar início, conclusão (com `total_from_feed`/`breaches_created`/`br
 {"timestamp": "2026-06-13 18:00:00", "level": "INFO", "logger": "app.sync", "message": "sync concluído", "total_from_feed": 829, "breaches_created": 829, "breaches_updated": 0, "breaches_skipped": 0}
 ```
 
+## Cache HTTP (ETag)
+
+`GET /breaches` e `GET /breaches/{name}` (`app/etag.py`) respondem com um header `ETag` —
+SHA-256 do JSON do corpo da resposta, entre aspas (ex.: `"3f9a...c1"`). Se o cliente reenviar a
+mesma requisição com `If-None-Match: <etag>` e o conteúdo não tiver mudado, a API responde
+`304 Not Modified` sem corpo, evitando reenviar a listagem/detalhe inteiros. Qualquer mudança no
+catálogo (novo `/sync`) muda o conteúdo serializado e, portanto, o ETag.
+
+```bash
+curl -i http://localhost:8000/breaches/Adobe
+# HTTP/1.1 200 OK
+# ETag: "3f9a1c...e2c1"
+
+curl -i http://localhost:8000/breaches/Adobe -H 'If-None-Match: "3f9a1c...e2c1"'
+# HTTP/1.1 304 Not Modified
+# ETag: "3f9a1c...e2c1"
+```
+
 ## Status do projeto
 
 - [x] Setup do ambiente (`uv`, `pyproject.toml`, estrutura de pastas)
@@ -179,7 +197,7 @@ para registrar início, conclusão (com `total_from_feed`/`breaches_created`/`br
   - [x] Alembic (migrations) — ver [Migrations (Alembic)](#migrations-alembic)
   - [x] Sync agendado (APScheduler) — ver [Sync agendado](#sync-agendado)
   - [x] Logs estruturados em JSON — ver [Logs estruturados (JSON)](#logs-estruturados-json)
-  - [ ] Cache HTTP (ETag/If-None-Match)
+  - [x] Cache HTTP (ETag/If-None-Match) — ver [Cache HTTP (ETag)](#cache-http-etag)
 
 ## Decisões técnicas e suposições
 
@@ -263,3 +281,11 @@ para registrar início, conclusão (com `total_from_feed`/`breaches_created`/`br
     (`breaches_created`/`breaches_updated`/`breaches_skipped`) porque `created` colide com o
     atributo padrão `LogRecord.created` (timestamp interno), e `logging` recusa `extra` que
     sobrescreva atributos do record.
+21. **ETag forte via SHA-256 do corpo** (`app/etag.py`): `compute_etag()` serializa o
+    `response_model` (`model_dump_json()`) e aplica SHA-256, entre aspas — qualquer mudança no
+    conteúdo (inclusive um novo `/sync`) muda o ETag. A comparação de `If-None-Match` é uma
+    igualdade exata de string (sem suporte a `*`, listas de ETags ou comparação fraca `W/`) —
+    suficiente para o caso de uso (cliente que guarda o último ETag recebido) e simples de
+    testar. `list_breaches`/`get_breach` passam a retornar `BreachListResponse | Response`
+    /`BreachOut | Response`: no caminho `304`, `etag_response()` devolve um `Response` cru
+    (sem corpo), ignorando o `response_model` da rota.
