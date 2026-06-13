@@ -77,6 +77,29 @@ uv run ruff check .
 uv run ruff format --check .
 ```
 
+## Rodando com Docker (Postgres real)
+
+O `docker-compose.yml` sobe a API junto com um Postgres 16 real — é o caminho recomendado
+para validar a aplicação contra o banco de produção (e não apenas SQLite):
+
+```bash
+docker compose up --build
+```
+
+- **`db`**: Postgres 16 com `healthcheck` (`pg_isready`); dados persistem no volume nomeado
+  `breach_radar_pgdata`.
+- **`app`**: builda a imagem a partir do `Dockerfile` (Python 3.11 + `uv`) e só inicia depois
+  que o `healthcheck` do `db` ficar saudável (`depends_on: condition: service_healthy`).
+  `DATABASE_URL` já vem configurada no `docker-compose.yml` apontando para
+  `postgresql+psycopg://postgres:postgres@db:5432/breach_radar` (hostname `db`, o nome do
+  serviço na rede interna do Compose — diferente do `.env.example`, que assume Postgres
+  acessível em `localhost` para quem roda a API fora do Docker).
+- API disponível em <http://127.0.0.1:8000/docs>. As tabelas são criadas automaticamente no
+  startup (`Base.metadata.create_all()`), o mesmo mecanismo usado com SQLite.
+
+Para parar: `docker compose down` (acrescente `-v` para também remover o volume de dados do
+Postgres).
+
 ## Status do projeto
 
 - [x] Setup do ambiente (`uv`, `pyproject.toml`, estrutura de pastas)
@@ -98,7 +121,14 @@ uv run ruff format --check .
       `tests/test_database.py` cobre `app/database.py`)
 - [x] [`TEST_PLAN.md`](TEST_PLAN.md): estratégia de testes, casos positivos/negativos/extremos
       por endpoint, o que não foi testado e por quê, riscos identificados
-- [ ] Itens opcionais (Docker/compose, CI, Alembic, sync agendado, logs JSON, ETag)
+- Itens opcionais (Phase 8):
+  - [x] Docker + docker-compose (app + Postgres 16 com healthcheck) — ver
+        [Rodando com Docker](#rodando-com-docker-postgres-real)
+  - [ ] CI (GitHub Actions)
+  - [ ] Alembic (migrations)
+  - [ ] Sync agendado (APScheduler)
+  - [ ] Logs estruturados em JSON
+  - [ ] Cache HTTP (ETag/If-None-Match)
 
 ## Decisões técnicas e suposições
 
@@ -149,3 +179,9 @@ uv run ruff format --check .
     SQLite em memória (`StaticPool`) e `create_engine` padrão (Postgres/produção). Permite testar
     o ramo não-SQLite (`tests/test_database.py`) sem recarregar o módulo nem depender de um
     Postgres real.
+16. **Docker**: `Dockerfile` baseado na imagem oficial `ghcr.io/astral-sh/uv:python3.11-bookworm-slim`,
+    com a instalação de dependências (`uv sync --frozen --no-dev`) numa camada separada da cópia
+    do código-fonte. `docker-compose.yml` sobe `app` + `db` (`postgres:16` com `healthcheck`
+    `pg_isready`); o `app` só inicia após o `db` ficar saudável. Ambiente de desenvolvimento sem
+    Docker disponível — configuração não validada localmente via `docker compose up`; fica como
+    passo de verificação manual do usuário.
