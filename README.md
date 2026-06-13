@@ -67,6 +67,9 @@ A suíte roda com cobertura habilitada e `--cov-fail-under=80` (configurado em
 `pyproject.toml`); a meta do desafio é cobertura mínima de 80% e a suíte atinge 100%. Todos os
 testes usam SQLite em memória — nenhuma chamada real à HIBP ou ao Postgres é feita em CI.
 
+Para a estratégia de testes (casos positivos/negativos/extremos por endpoint, o que não foi
+testado e por quê, riscos identificados), veja [`TEST_PLAN.md`](TEST_PLAN.md).
+
 ## Lint e formatação
 
 ```bash
@@ -93,7 +96,8 @@ uv run ruff format --check .
       `GET /breaches/{name}` continuam `200` a partir do banco local, e um novo `/sync` retorna
       `503` sem alterar o banco. Cobertura fechada em 100% (`--cov-fail-under=80`,
       `tests/test_database.py` cobre `app/database.py`)
-- [ ] `TEST_PLAN.md`
+- [x] [`TEST_PLAN.md`](TEST_PLAN.md): estratégia de testes, casos positivos/negativos/extremos
+      por endpoint, o que não foi testado e por quê, riscos identificados
 - [ ] Itens opcionais (Docker/compose, CI, Alembic, sync agendado, logs JSON, ETag)
 
 ## Decisões técnicas e suposições
