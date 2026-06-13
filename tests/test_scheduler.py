@@ -8,7 +8,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 from app import scheduler
 from app.hibp_client import HIBPFeedError
-from app.schemas import SyncResult
 
 
 def test_start_scheduler_desativado_retorna_none():
@@ -32,13 +31,12 @@ def test_start_scheduler_ativado_agenda_job_de_sync():
         result.shutdown()
 
 
-def test_run_sync_job_sucesso_loga_resultado():
+def test_run_sync_job_sucesso_chama_sync_breaches_e_fecha_sessao():
     fake_db = MagicMock()
-    fake_result = SyncResult(total_from_feed=3, created=1, updated=2, skipped=0)
 
     with (
         patch("app.scheduler.SessionLocal", return_value=fake_db),
-        patch("app.scheduler.sync_breaches", return_value=fake_result) as sync_breaches,
+        patch("app.scheduler.sync_breaches") as sync_breaches,
     ):
         scheduler.run_sync_job()
 

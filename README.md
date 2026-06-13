@@ -138,6 +138,19 @@ endpoint manual, sem propagar `503` para lugar nenhum).
 **Desativado por padrão** (`ENABLE_SCHEDULED_SYNC=false`) para não disparar chamadas reais à
 HIBP durante os testes/CI.
 
+## Logs estruturados (JSON)
+
+`app/logging_config.py` configura o logger raiz (`configure_logging()`, chamado na importação
+de `app/main.py`) para emitir uma linha JSON por log em stdout — `timestamp`, `level`, `logger`,
+`message` e quaisquer campos extras. Os eventos de `sync_breaches` (`app/sync.py`) usam isso
+para registrar início, conclusão (com `total_from_feed`/`breaches_created`/`breaches_updated`/
+`breaches_skipped`) e falha do feed — tanto via `POST /sync` quanto via
+[sync agendado](#sync-agendado). Exemplo de linha de log:
+
+```json
+{"timestamp": "2026-06-13 18:00:00", "level": "INFO", "logger": "app.sync", "message": "sync concluído", "total_from_feed": 829, "breaches_created": 829, "breaches_updated": 0, "breaches_skipped": 0}
+```
+
 ## Status do projeto
 
 - [x] Setup do ambiente (`uv`, `pyproject.toml`, estrutura de pastas)
@@ -165,7 +178,7 @@ HIBP durante os testes/CI.
   - [x] CI (GitHub Actions) — ver [CI](#ci)
   - [x] Alembic (migrations) — ver [Migrations (Alembic)](#migrations-alembic)
   - [x] Sync agendado (APScheduler) — ver [Sync agendado](#sync-agendado)
-  - [ ] Logs estruturados em JSON
+  - [x] Logs estruturados em JSON — ver [Logs estruturados (JSON)](#logs-estruturados-json)
   - [ ] Cache HTTP (ETag/If-None-Match)
 
 ## Decisões técnicas e suposições
@@ -242,3 +255,11 @@ HIBP durante os testes/CI.
     do `get_db()` por request) e captura `HIBPFeedError` — um ciclo com o feed fora do ar só gera
     um log de aviso, sem derrubar o agendador. `app/main.py` encerra o scheduler
     (`shutdown()`) no shutdown da app.
+20. **Logs JSON** (`app/logging_config.py`): `JSONFormatter` serializa cada `LogRecord`
+    (`timestamp`/`level`/`logger`/`message` + qualquer `extra`); `configure_logging()` substitui
+    os handlers do logger raiz por um único `StreamHandler` com esse formatter. Chamado uma vez
+    na importação de `app/main.py`. `app/sync.py` é o único ponto que loga eventos de negócio
+    (início/conclusão/falha do sync) — os campos de contagem usam o prefixo `breaches_*`
+    (`breaches_created`/`breaches_updated`/`breaches_skipped`) porque `created` colide com o
+    atributo padrão `LogRecord.created` (timestamp interno), e `logging` recusa `extra` que
+    sobrescreva atributos do record.

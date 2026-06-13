@@ -11,7 +11,10 @@ from app import (
     models,  # noqa: F401 — registra Breach em Base.metadata para o create_all
     scheduler,
 )
+from app.logging_config import configure_logging
 from app.routers import breaches, sync
+
+configure_logging()
 
 
 @asynccontextmanager

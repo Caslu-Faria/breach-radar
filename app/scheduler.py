@@ -7,8 +7,6 @@ chamadas à HIBP durante os testes). Quando ativo, roda `sync_breaches` a cada
 
 from __future__ import annotations
 
-import logging
-
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from app.config import settings
@@ -16,25 +14,17 @@ from app.database import SessionLocal
 from app.hibp_client import HIBPFeedError
 from app.sync import sync_breaches
 
-logger = logging.getLogger(__name__)
-
 
 def run_sync_job() -> None:
-    """Executa um ciclo de sync isolando falhas do feed (não derruba o agendador)."""
+    """Executa um ciclo de sync isolando falhas do feed (não derruba o agendador).
+
+    `sync_breaches` já loga início/conclusão/falha (ver `app/sync.py`).
+    """
     db = SessionLocal()
     try:
-        result = sync_breaches(db)
-        logger.info(
-            "sync agendado concluído",
-            extra={
-                "total_from_feed": result.total_from_feed,
-                "created": result.created,
-                "updated": result.updated,
-                "skipped": result.skipped,
-            },
-        )
-    except HIBPFeedError as exc:
-        logger.warning("sync agendado falhou: %s", exc)
+        sync_breaches(db)
+    except HIBPFeedError:
+        pass
     finally:
         db.close()
 
