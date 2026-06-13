@@ -11,7 +11,7 @@ repositório.
 
 - Sugerir commits após cada nova implementação de feature ou task
 - Explicar o motivo de todas as edições sugeridas
-- Criar PRs após commits
+- Criar PRs após commits, devem ser criados numa branch respectiva a etapa feita. (feat/ phase *, fix/ bug *, docs/ *)
 - Documentar o projeto após cada phase ou implementação concluída
 
 ## Estado do repositório
