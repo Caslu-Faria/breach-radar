@@ -6,8 +6,8 @@ API REST em **Python (FastAPI) + PostgreSQL** que sincroniza e expõe o catálog
 breaches do [HIBP](https://haveibeenpwned.com/api/v3/breaches), com filtros ricos sobre os
 dados. Projeto desenvolvido para o desafio backend Neuroscan (ver `CLAUDE.md`).
 
-> **Status**: projeto em desenvolvimento — veja [Status do projeto](#status-do-projeto) para o
-> que já está implementado.
+> **Status**: concluído — todas as fases obrigatórias e os itens opcionais (Phase 8) foram
+> implementados. Veja [Status do projeto](#status-do-projeto) para o detalhamento.
 
 ## Stack
 
