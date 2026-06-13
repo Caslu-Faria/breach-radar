@@ -32,4 +32,4 @@ line-length = 100
 select = ["E", "F", "I", "UP"]
 
 [tool.pytest.ini_options]
-addopts = "--cov=app --cov=legacy --cov-report=term-missing"
+addopts = "--cov=app --cov=legacy --cov-report=term-missing --cov-fail-under=80"
