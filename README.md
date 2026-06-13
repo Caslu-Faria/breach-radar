@@ -81,7 +81,9 @@ uv run ruff format --check .
       [`legacy/BUGS_FOUND.md`](legacy/BUGS_FOUND.md), com testes que reproduzem cada um
 - [x] Camada de banco de dados: `app/config.py`, `app/database.py`, `app/models.py` (model
       `Breach`) e esqueleto da app FastAPI (`app/main.py`, cria as tabelas no startup)
-- [ ] Cliente HIBP + `POST /sync` (idempotente, com tratamento de feed indisponível)
+- [x] Cliente HIBP (`app/hibp_client.py`) + `POST /sync` (`app/sync.py`,
+      `app/routers/sync.py`) — idempotente (upsert por `Name`), `503` se o feed estiver
+      indisponível/inválido, defaults para campos ausentes (decisão #10)
 - [ ] `GET /breaches` e `GET /breaches/{name}` com os filtros descritos no `CLAUDE.md`
 - [ ] Testes de resiliência (feed fora do ar) e fechamento da cobertura ≥ 80%
 - [ ] `TEST_PLAN.md`
