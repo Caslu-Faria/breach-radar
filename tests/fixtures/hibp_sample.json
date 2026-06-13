@@ -1,0 +1,86 @@
+[
+  {
+    "Name": "Adobe",
+    "Domain": "adobe.com",
+    "BreachDate": "2013-10-04",
+    "AddedDate": "2013-12-04T00:00:00Z",
+    "PwnCount": 152445165,
+    "DataClasses": ["Email addresses", "Password hints", "Passwords", "Usernames"],
+    "IsVerified": true,
+    "IsSensitive": false,
+    "IsSpamList": false
+  },
+  {
+    "Name": "Dropbox",
+    "Domain": "dropbox.com",
+    "BreachDate": "2012-07-01",
+    "AddedDate": "2016-08-31T00:00:00Z",
+    "PwnCount": 68648009,
+    "DataClasses": ["Email addresses", "Passwords"],
+    "IsVerified": true,
+    "IsSensitive": false,
+    "IsSpamList": false
+  },
+  {
+    "Name": "LinkedIn",
+    "Domain": "linkedin.com",
+    "BreachDate": "2012-05-05",
+    "AddedDate": "2016-05-21T00:00:00Z",
+    "PwnCount": 164611595,
+    "DataClasses": ["Email addresses", "Passwords"],
+    "IsVerified": true,
+    "IsSensitive": false,
+    "IsSpamList": false
+  },
+  {
+    "Name": "AdultFriendFinder",
+    "Domain": "",
+    "BreachDate": "2016-10-15",
+    "AddedDate": "2016-11-13T09:04:00Z",
+    "PwnCount": 412214295,
+    "DataClasses": ["Browser user agent details", "Email addresses", "Passwords", "Sexual orientations"],
+    "IsVerified": true,
+    "IsSensitive": true,
+    "IsSpamList": true
+  },
+  {
+    "Name": "SemDataClasses",
+    "Domain": "semdataclasses.example",
+    "BreachDate": "2020-01-15",
+    "AddedDate": "2020-01-20T00:00:00Z",
+    "PwnCount": 1000,
+    "IsVerified": false,
+    "IsSensitive": false,
+    "IsSpamList": false
+  },
+  {
+    "Name": "SemDominio",
+    "BreachDate": "2019-03-10",
+    "AddedDate": "2019-03-15T00:00:00Z",
+    "PwnCount": 500,
+    "DataClasses": ["Email addresses"],
+    "IsVerified": true,
+    "IsSensitive": false,
+    "IsSpamList": false
+  },
+  {
+    "Name": "SemBreachDate",
+    "Domain": "sembreachdate.example",
+    "AddedDate": "2021-01-01T00:00:00Z",
+    "PwnCount": 10,
+    "DataClasses": ["Email addresses"],
+    "IsVerified": false,
+    "IsSensitive": false,
+    "IsSpamList": false
+  },
+  {
+    "Domain": "sem-name.example",
+    "BreachDate": "2018-06-06",
+    "AddedDate": "2018-06-10T00:00:00Z",
+    "PwnCount": 42,
+    "DataClasses": ["Email addresses"],
+    "IsVerified": false,
+    "IsSensitive": false,
+    "IsSpamList": false
+  }
+]
