@@ -12,6 +12,8 @@ RUN uv sync --frozen --no-dev
 
 COPY app ./app
 COPY legacy ./legacy
+COPY alembic ./alembic
+COPY alembic.ini ./
 
 ENV PATH="/app/.venv/bin:$PATH"
 

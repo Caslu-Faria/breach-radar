@@ -15,7 +15,11 @@ from app.routers import breaches, sync
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    database.Base.metadata.create_all(bind=database.engine)
+    # SQLite (default sem .env, usado em testes e modo local) cria as tabelas
+    # automaticamente no startup. Em Postgres, o schema é gerenciado pelo Alembic
+    # (`alembic upgrade head` — ver README).
+    if database.engine.dialect.name == "sqlite":
+        database.Base.metadata.create_all(bind=database.engine)
     yield
 
 

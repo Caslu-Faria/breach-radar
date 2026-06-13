@@ -15,6 +15,7 @@ dados. Projeto desenvolvido para o desafio backend Neuroscan (ver `CLAUDE.md`).
 - [FastAPI](https://fastapi.tiangolo.com/) + Uvicorn
 - SQLAlchemy 2.0 (ORM)
 - PostgreSQL (produção) / SQLite (testes e modo local sem configuração)
+- Alembic (migrations do schema do Postgres)
 - pydantic-settings (configuração via variáveis de ambiente / `.env`)
 - pytest + pytest-cov + respx (testes)
 - ruff (lint e formatação)
@@ -102,11 +103,26 @@ docker compose up --build
   `postgresql+psycopg://postgres:postgres@db:5432/breach_radar` (hostname `db`, o nome do
   serviço na rede interna do Compose — diferente do `.env.example`, que assume Postgres
   acessível em `localhost` para quem roda a API fora do Docker).
-- API disponível em <http://127.0.0.1:8000/docs>. As tabelas são criadas automaticamente no
-  startup (`Base.metadata.create_all()`), o mesmo mecanismo usado com SQLite.
+- API disponível em <http://127.0.0.1:8000/docs>. O `command` do serviço `app` roda
+  `alembic upgrade head` antes do `uvicorn`, aplicando as migrations no Postgres.
 
 Para parar: `docker compose down` (acrescente `-v` para também remover o volume de dados do
 Postgres).
+
+## Migrations (Alembic)
+
+O schema do Postgres é versionado via [Alembic](https://alembic.sqlalchemy.org/) em
+`alembic/versions/`. A URL de conexão vem de `app.config.settings.database_url`
+(`alembic/env.py`), então basta `.env`/variáveis de ambiente estarem configuradas:
+
+```bash
+uv run alembic upgrade head                          # aplica todas as migrations pendentes
+uv run alembic revision --autogenerate -m "mensagem" # gera uma nova migration a partir dos models
+```
+
+Com `docker compose up`, isso roda automaticamente antes da API subir (ver seção anterior).
+**SQLite continua usando `Base.metadata.create_all()` no startup** (default sem `.env`, usado
+em testes e modo local) — o Alembic é o caminho de schema apenas para Postgres.
 
 ## Status do projeto
 
@@ -133,7 +149,7 @@ Postgres).
   - [x] Docker + docker-compose (app + Postgres 16 com healthcheck) — ver
         [Rodando com Docker](#rodando-com-docker-postgres-real)
   - [x] CI (GitHub Actions) — ver [CI](#ci)
-  - [ ] Alembic (migrations)
+  - [x] Alembic (migrations) — ver [Migrations (Alembic)](#migrations-alembic)
   - [ ] Sync agendado (APScheduler)
   - [ ] Logs estruturados em JSON
   - [ ] Cache HTTP (ETag/If-None-Match)
@@ -165,12 +181,13 @@ Postgres).
 10. **Registros malformados no `/sync`**: sem `Name` → registro pulado; sem
     `Domain`/`BreachDate`/`DataClasses` → armazenados como `""`/`None`/`[]`; sem
     `PwnCount`/flags booleanas → `0`/`False`. Um registro ruim nunca derruba o `/sync` inteiro.
-11. **Tabelas criadas via `Base.metadata.create_all()`** no startup da app (sem Alembic no MVP;
-    migrations ficam como item opcional da Phase 8).
+11. **Tabelas criadas via `Base.metadata.create_all()`** no startup da app **apenas quando o
+    dialeto é SQLite** (`database.engine.dialect.name == "sqlite"`, ver `app/main.py`) — cobre
+    testes e o modo local sem `.env`. Em Postgres, o schema é gerenciado pelo Alembic
+    (`alembic upgrade head`, ver [Migrations (Alembic)](#migrations-alembic)).
 12. **`DATABASE_URL` tem default `sqlite://`** (memória) em `app/config.py` — permite rodar a
     app e a suíte de testes sem `.env`/Docker/Postgres. Em produção, `DATABASE_URL` (via `.env`
-    ou `docker-compose`) aponta para o Postgres real; a validação final contra Postgres é
-    documentada como passo manual (Phase 8).
+    ou `docker-compose`) aponta para o Postgres real.
 13. **Filtros e paginação de `GET /breaches` declarados como `str | None = Query(None)`** —
     evita o `422` automático do FastAPI para parâmetros malformados. Cada filtro é validado
     manualmente em `app/validators.py` (`parse_date_param`, `parse_non_negative_int_param`,
@@ -197,3 +214,10 @@ Postgres).
     [Como rodar os testes](#como-rodar-os-testes) e [Lint e formatação](#lint-e-formatação)
     (`uv sync`, `ruff check`, `ruff format --check`, `pytest`) — sem etapa de Postgres, já que a
     suíte roda 100% em SQLite.
+18. **Alembic**: `alembic/env.py` lê `target_metadata` de `app.database.Base` (importando
+    `app.models` para registrar `Breach`) e a URL de `app.config.settings.database_url` — uma
+    única fonte de verdade para o schema, sem URL duplicada em `alembic.ini`. A migration
+    inicial (`alembic/versions/..._create_breaches_table.py`) replica manualmente as colunas de
+    `Breach` (mais previsível que `--autogenerate` contra o SQLite em memória usado por padrão).
+    `app/main.py` só roda `create_all()` quando o dialeto é `sqlite`; `docker-compose.yml` roda
+    `alembic upgrade head` antes do `uvicorn` para Postgres.
