@@ -10,7 +10,7 @@ from app import (
     database,
     models,  # noqa: F401 — registra Breach em Base.metadata para o create_all
 )
-from app.routers import sync
+from app.routers import breaches, sync
 
 
 @asynccontextmanager
@@ -20,4 +20,5 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Breach Radar", lifespan=lifespan)
+app.include_router(breaches.router)
 app.include_router(sync.router)
