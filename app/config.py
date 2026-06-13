@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     hibp_api_url: str = "https://haveibeenpwned.com/api/v3/breaches"
     hibp_user_agent: str = "breach-radar-app (contato@example.com)"
     hibp_timeout_seconds: int = 10
+    enable_scheduled_sync: bool = False
+    sync_interval_minutes: int = 60
 
 
 settings = Settings()

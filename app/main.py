@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from app import (
     database,
     models,  # noqa: F401 — registra Breach em Base.metadata para o create_all
+    scheduler,
 )
 from app.routers import breaches, sync
 
@@ -20,7 +21,11 @@ async def lifespan(app: FastAPI):
     # (`alembic upgrade head` — ver README).
     if database.engine.dialect.name == "sqlite":
         database.Base.metadata.create_all(bind=database.engine)
+
+    sync_scheduler = scheduler.start_scheduler()
     yield
+    if sync_scheduler is not None:
+        sync_scheduler.shutdown()
 
 
 app = FastAPI(title="Breach Radar", lifespan=lifespan)
